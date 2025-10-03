@@ -1,0 +1,33 @@
+name: Build EncosianOS
+
+on:
+  workflow_dispatch:   # lets you run the build manually from Actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git qemu-user-static binfmt-support debootstrap rsync unzip xz-utils parted curl
+
+      - name: Clone pi-gen
+        run: |
+          git clone https://github.com/RPi-Distro/pi-gen.git
+          cp -r config stage2 pi-gen/
+
+      - name: Build image
+        run: |
+          cd pi-gen
+          sudo ./build.sh
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: EncosianOS-img
+          path: pi-gen/deploy/*.img
