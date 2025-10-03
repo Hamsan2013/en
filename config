@@ -1,0 +1,5 @@
+IMG_NAME="EncosianOS"
+PI_GEN_IMAGE_TYPE="raspios_lite_armhf"
+FIRST_USER_NAME="pi"
+FIRST_USER_PASS="raspberry"
+STAGE_LIST="stage0 stage1 stage2"

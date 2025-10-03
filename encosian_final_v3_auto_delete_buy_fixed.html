@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Encosian.csbi — Final</title>
+<style>
+:root{
+  --bg1:#f6ddfc; --bg2:#a2fceb; --primary:#4f44db; --accent:#fa7a97;
+  --card:#ffffff; --muted:#6b6b6b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter, Arial, Helvetica, sans-serif;background:linear-gradient(120deg,var(--bg1),var(--bg2));color:#222;min-height:100vh}
+.header{background:linear-gradient(90deg,var(--primary),#38e7ff);color:#fff;padding:14px 16px;text-align:center;font-weight:700;font-size:18px;position:sticky;top:0;z-index:50}
+.container{max-width:980px;margin:18px auto;padding:0 16px}
+.card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 8px 30px rgba(10,10,20,0.08);margin-top:18px}
+.row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.col{flex:1;min-width:240px}
+.hidden{display:none}
+.input, input[type="text"], input[type="password"], input[type="number"], textarea, select{width:100%;padding:10px;border-radius:9px;border:1px solid #d6e6f2;background:#f7fdff;margin:8px 0;font-size:14px}
+.btn{background:var(--primary);color:#fff;border:none;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:700}
+.small{font-size:13px;color:var(--muted)}
+.list{list-style:none;padding:0;margin:0}
+.list li{padding:10px;border-bottom:1px solid #f0f0f0;display:flex;justify-content:space-between;align-items:center}
+.ad-item{display:flex;gap:12px;align-items:center}
+.ad-item img{width:110px;height:78px;object-fit:cover;border-radius:8px;border:1px solid #eee}
+.note{color:var(--muted);font-size:14px}
+.bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;background:rgba(255,255,255,0.98);padding:8px 12px;border-radius:28px;display:flex;gap:20px;box-shadow:0 8px 24px rgba(0,0,0,0.12)}
+.bottom-nav button{background:transparent;border:none;font-size:26px;cursor:pointer}
+.float-add{position:fixed;right:18px;bottom:86px;background:var(--accent);color:#fff;border:none;width:56px;height:56px;border-radius:50%;font-size:26px;box-shadow:0 10px 24px rgba(0,0,0,0.18);cursor:pointer}
+.footer{margin:18px 0;text-align:center;color:#333;opacity:.8;font-size:13px}
+
+@media(max-width:720px){.row{flex-direction:column}.ad-item img{width:90px;height:64px}}
+</style>
+</head>
+<body>
+<div class="header" id="appHeader">Encosian.csbi — Currency: Ë</div>
+<div class="container">
+
+  <!-- Landing: Login split -->
+  <div id="landing" class="card">
+    <h2 style="text-align:center;margin:6px 0 12px 0">Welcome to Encosian</h2>
+    <div class="row">
+      <div class="col card" style="text-align:center">
+        <h3>Login as Citizen</h3>
+        <input id="loginId" class="input" list="userList" placeholder="Enter your ID (example: user1)"/>
+        <input id="loginPin" class="input" type="password" placeholder="4-digit PIN"/>
+        <button class="btn" onclick="loginCitizen()">Login as Citizen</button>
+      </div>
+      <div class="col card" style="text-align:center">
+        <h3>President Access</h3>
+        <input id="presPin" class="input" type="password" placeholder="President PIN"/>
+        <button class="btn" onclick="presLogin()">Enter as President</button>
+        <p class="small">President area is protected. (PIN is not shown here)</p>
+      
+      <div class="col card" style="text-align:center">
+        <h3>Vice President Access</h3>
+        <input id="vpPin" class="input" type="password" placeholder="Vice President PIN"/>
+        <button class="btn" onclick="vpLogin()">Enter as Vice President</button>
+        <p class="small">Vice President area is protected. (PIN is not shown here)</p>
+      </div>
+</div>
+    </div>
+    <p class="note" style="text-align:center;margin-top:12px">After login you'll see the bottom navigation: 🏠 Home | 🏦 Banking | 🛒 Shopping</p>
+  </div>
+
+  <!-- Main Navigation (hidden until login) -->
+  <nav id="mainNav" class="card hidden" style="display:flex;justify-content:center;gap:12px;align-items:center">
+    <button class="btn" onclick="showSection('home')">🏠 Home</button>
+    <button class="btn" onclick="showSection('bank')">🏦 Banking</button>
+    <button class="btn" onclick="showSection('shop')">🛒 Shopping</button>
+    <button id="presPanelBtn" class="btn hidden" onclick="showSection('president')">👑 President</button>
+    <button class="btn" onclick="logout()">Logout</button>
+  </nav>
+
+  <!-- Home -->
+  <section id="home" class="card hidden">
+    <h2>Home</h2>
+    <div class="row">
+      <div class="col">
+        <p><strong>ID:</strong> <span id="hdId">—</span></p>
+        <p><strong>Name:</strong> <span id="hdName">—</span></p>
+        <p><strong>WhatsApp:</strong> <span id="hdMobile">—</span></p>
+        <p><strong>Citizenship:</strong> <span id="hdCitz">—</span></p>
+        <p><strong>Age:</strong> <span id="hdAge">—</span></p>
+        <p><strong>Balance:</strong> <span id="hdBal">0</span> Ë</p>
+      </div>
+      <div class="col">
+        <h4 class="small">Search Friend by ID</h4>
+        <input id="searchId" class="input" list="userList" placeholder="Friend ID"/>
+        <button class="btn" onclick="searchFriend()">Search</button>
+        <p id="searchRes" class="note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Banking -->
+  <section id="bank" class="card hidden">
+    <h2>Banking</h2>
+    <div class="row">
+      <div class="col" style="min-width:200px">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button class="btn" onclick="showPay()">Pay</button>
+          <button class="btn" onclick="showTxnHistory()">Transaction History</button>
+          <button class="btn" onclick="showChangePin()">Change PIN</button>
+        </div>
+      </div>
+      <div class="col" id="bankArea">
+        <p class="note">Choose an option to continue.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shopping -->
+  <section id="shop" class="card hidden">
+    <h2>Shopping</h2>
+    <div class="row">
+      <div class="col">
+        <h4>Products</h4>
+        <ul id="prodList" class="list"></ul>
+      </div>
+      <div class="col" id="uploadBox">
+        <h4>Upload Product</h4>
+        <p class="small">You may choose an image file from your device (will be stored as data URL) or paste an image URL.</p>
+        <input id="fileInput" type="file" accept="image/*"/>
+        <input id="imgUrl" class="input" placeholder="Image URL (optional)" />
+        <input id="prodPrice" class="input" type="number" placeholder="Price in Ë" min="1" />
+        <input id="prodDesc" class="input" placeholder="Description of product"/>
+        <select id="serverOpt" class="input">
+          <option value="">Select Server</option>
+          <option value="Server1">Server 1</option>
+          <option value="Server2">Server 2</option>
+        </select>
+
+        <button class="btn" onclick="uploadProduct()">Upload to Shop</button>
+        <p id="uploadMsg" class="note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- President Panel -->
+  <section id="president" class="card hidden">
+    <h2>President - Admin Panel</h2>
+    <div class="row">
+      <div class="col">
+        <h4>Create New User</h4>
+        <input id="admId" class="input" list="userList" placeholder="New User ID"/>
+        <input id="admName" class="input" placeholder="Full name"/>
+        <input id="admMobile" class="input" placeholder="WhatsApp number"/>
+        <input id="admAge" class="input" placeholder="Age"/>
+        <input id="admCitz" class="input" placeholder="Citizenship number"/>
+        <input id="admPin" class="input" type="password" placeholder="PIN (4 digits)"/>
+        <button class="btn" onclick="adminCreateUser()">Create User</button>
+        <p id="admMsg" class="note"></p>
+      </div>
+      <div class="col">
+        <h4>Manage Termination</h4>
+        <select id="termSelect" class="input"></select>
+        <input id="termDate" class="input" type="date"/>
+        <div>
+          <label><input type="radio" name="termType" value="temporary" checked/> Temporary</label>
+          <label><input type="radio" name="termType" value="permanent"/> Permanent</label>
+        </div>
+        <button class="btn" onclick="terminateUser()">Terminate</button>
+        <button class="btn" onclick="cancelTermination()">Cancel Termination</button>
+        <p id="termMsg" class="note"></p>
+      </div>
+    </div>
+
+    <hr/>
+    <h4>Assign Role</h4>
+    <select id="roleSel" class="input">
+      <option value="president">President</option>
+      <option value="vicepresident">Vice President</option>
+      <option value="chiefminister">Chief Minister</option>
+      <option value="govmember">Government Member</option>
+    </select>
+    <input id="roleUser" class="input" list="userList" placeholder="User ID to assign"/>
+    <button class="btn" onclick="assignRole()">Assign</button>
+    <p id="roleMsg" class="note"></p>
+  </section>
+
+  <div class="card hidden" id="historyCard">
+    <h4>Transactions & Activity</h4>
+    <ul id="txnList" class="list"></ul>
+    <h4>Activity</h4>
+    <ul id="actList" class="list"></ul>
+  </div>
+
+  <div class="footer">Encosian.csbi — Demo local version — Currency: Ë</div>
+</div>
+
+<!-- floating add button for quick upload -->
+<button class="float-add hidden" id="floatAdd" title="Add product" onclick="toggleUpload()">+</button>
+
+<!-- bottom emoji nav -->
+<div class="bottom-nav hidden" id="bottomNav">
+  <button onclick="showSection('home')" title="Home">🏠</button>
+  <button onclick="showSection('bank')" title="Banking">🏦</button>
+  <button onclick="showSection('shop')" title="Shopping">🛒</button>
+</div>
+
+<script>
+/* Storage keys */
+const K_USERS = 'enc_users_final_v3';
+const K_PRODS = 'enc_prods_final_v3';
+const K_TXNS = 'enc_txns_final_v3';
+const K_TERM = 'enc_term_final_v3';
+const K_ROLES = 'enc_roles_final_v3';
+
+/* Load helpers */
+function load(key, def){ try{ const s = localStorage.getItem(key); return s ? JSON.parse(s) : def; }catch(e){return def;} }
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+/* Data */
+let users = load(K_USERS, {});
+let prods = load(K_PRODS, []);
+let txns = load(K_TXNS, []);
+let term = load(K_TERM, {});
+let roles = load(K_ROLES, {});
+
+/* Ensure President user exists with PIN 2012 (but do NOT display anywhere) */
+if(!users['president']){
+  users['president'] = { id:'president', name:'President', mobile:'', age:'', citz:'', pin:'2012', balance:0 };
+  save(K_USERS, users);
+}
+
+/* current session */
+let current = null;
+
+/* UI helpers */
+function showMainUI(){
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('mainNav').classList.remove('hidden');
+  document.getElementById('bottomNav').classList.remove('hidden');
+  document.getElementById('floatAdd').classList.remove('hidden');
+  renderAll();
+}
+
+function showSection(id){
+  // hide all sections
+  ['home','bank','shop','president'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+  if(id==='home' || id==='bank' || id==='shop' || id==='president'){
+    document.getElementById(id).classList.remove('hidden');
+  }
+  renderAll();
+}
+
+/* Landing actions */
+function loginCitizen(){
+  const id = document.getElementById('loginId').value.trim();
+  const pin = document.getElementById('loginPin').value.trim();
+  if(!id || !pin){ alert('Enter ID and PIN'); return; }
+  const u = users[id];
+  if(!u){ alert('User not found'); return; }
+  if(u.pin !== pin){ alert('Incorrect PIN'); return; }
+  if(isTerminated(id)){ alert('Account terminated or blocked'); return; }
+  current = u;
+  document.getElementById('appHeader').textContent = `Welcome, ${current.name} | Balance: ${current.balance} Ë`;
+  showMainUI();
+  showSection('home');
+}
+
+function presLogin(){
+  const pin = document.getElementById('presPin').value.trim();
+  if(pin !== '2012'){ alert('Incorrect President PIN'); return; }
+  // set current to president account so admin actions reflect under president
+  current = users['president'];
+  document.getElementById('presPanelBtn').classList.remove('hidden');
+  document.getElementById('appHeader').textContent = `President (Admin)`;
+  showMainUI();
+  showSection('president');
+}
+
+
+function vpLogin(){
+  const pin = document.getElementById('vpPin').value.trim();
+  if(pin !== '2012'){ alert('Incorrect Vice President PIN'); return; }
+  if(!users['vicepresident']){
+    users['vicepresident'] = { id:'vicepresident', name:'Vice President', mobile:'', age:'', citz:'', pin:'2012', balance:0 };
+    save(K_USERS, users);
+  }
+  current = users['vicepresident'];
+  document.getElementById('presPanelBtn').classList.remove('hidden');
+  document.getElementById('appHeader').textContent = `Vice President (Admin)`;
+  showMainUI();
+  showSection('president');
+}
+
+
+function buildUserDatalist(){
+  const dl = document.getElementById('userList');
+  if(!dl) return;
+  dl.innerHTML='';
+  Object.values(users).forEach(u=>{
+    const opt=document.createElement('option');
+    opt.value=u.id;
+    opt.label=`${u.id} (${u.name})`;
+    dl.appendChild(opt);
+  });
+}
+
+/* Render functions */
+function renderAll(){
+  renderProfile();
+  renderProductList();
+  renderTxnList();
+  populateTermSelect();
+  buildUserDatalist();
+  save(K_USERS, users);
+  save(K_PRODS, prods);
+}
+
+/* Profile */
+function renderProfile(){
+  if(!current) return;
+  document.getElementById('hdId').textContent = current.id || '—';
+  document.getElementById('hdName').textContent = current.name || '—';
+  document.getElementById('hdMobile').textContent = current.mobile || '—';
+  document.getElementById('hdCitz').textContent = current.citz || '—';
+  document.getElementById('hdAge').textContent = current.age || '—';
+  document.getElementById('hdBal').textContent = (current.balance||0);
+  document.getElementById('appHeader').textContent = `${current.name || current.id} | Balance: ${current.balance||0} Ë`;
+}
+
+/* SEARCH */
+function searchFriend(){
+  const id = document.getElementById('searchId').value.trim();
+  const out = document.getElementById('searchRes'); out.textContent='';
+  if(!id){ out.textContent='Enter ID'; return; }
+  const u = users[id];
+  if(!u){ out.textContent='User not found'; return; }
+  out.textContent = `Found: ${u.name} | WhatsApp: ${u.mobile || '-'} | Age: ${u.age || '-'} | Balance: ${u.balance||0} Ë`;
+}
+
+/* BANK: Pay flow */
+function showPay(){
+  const area = document.getElementById('bankArea');
+  area.innerHTML = `
+    <h3>Pay Ë</h3>
+    <input id="payTo" class="input" list="userList" placeholder="Recipient ID"/>
+    <button class="btn" onclick="validateRecipient()">Next: Enter Amount</button>
+    <p id="payMsg" class="note"></p>
+  `;
+}
+
+function validateRecipient(){
+  const to = document.getElementById('payTo').value.trim();
+  const msg = document.getElementById('payMsg'); msg.textContent='';
+  if(!to){ msg.textContent='Enter recipient ID'; return; }
+  if(!users[to]){ msg.textContent='Wrong user ID. Please enter a valid user ID.'; return; }
+  // proceed to amount
+  const rec = users[to];
+  document.getElementById('bankArea').innerHTML = `
+    <h3>Pay to ${rec.name} (${rec.id})</h3>
+    <input id="payAmount" class="input" type="number" placeholder="Enter amount (numbers only)" min="1"/>
+    <button class="btn" onclick="validateAmount('${rec.id}')">Next: Enter PIN</button>
+    <p id="amountMsg" class="note"></p>
+  `;
+}
+
+function validateAmount(recId){
+  const amt = document.getElementById('payAmount').value.trim();
+  const a = Number(amt);
+  const msg = document.getElementById('amountMsg'); msg.textContent='';
+  if(amt === '' || isNaN(a) || a <= 0){ msg.textContent='Please enter numbers only.'; return; }
+  // show confirm PIN
+  document.getElementById('bankArea').innerHTML = `
+    <h3>Confirm Payment</h3>
+    <p class="note">You will pay ${a} Ë to ${recId}</p>
+    <input id="confirmPin" class="input" type="password" placeholder="Enter your PIN to confirm"/>
+    <button class="btn" onclick="completePayment('${recId}', ${a})">Pay Now</button>
+    <p id="finalMsg" class="note"></p>
+  `;
+}
+
+function completePayment(recId, amount){
+  const pin = document.getElementById('confirmPin').value.trim();
+  const out = document.getElementById('finalMsg'); out.textContent='';
+  if(pin !== (current.pin||'')){ out.textContent = 'Incorrect PIN.'; return; }
+  if(current.id!=='president' && current.id!=='vicepresident' && Number(current.balance) < Number(amount)){ out.textContent = 'Your balance is too low for this payment.'; return; }
+  if(!users[recId]){ out.textContent = 'Recipient not found.'; return; }
+  if(isTerminated(recId)){ out.textContent = 'Recipient account is terminated.'; return; }
+  // process transfer
+  users[current.id].balance = Number(users[current.id].balance) - Number(amount);
+  users[recId].balance = Number(users[recId].balance) + Number(amount);
+  // update current object reference
+  current = users[current.id];
+  // record transaction
+  txns.push({ from: current.id, to: recId, amount: Number(amount), date: Date.now() });
+  save(K_TXNS, txns); save(K_USERS, users);
+  out.textContent = `Successfully paid ${amount} Ë to ${recId}.`;
+  renderAll();
+}
+
+/* Transaction history view */
+function showTxnHistory(){
+  const area = document.getElementById('bankArea');
+  const my = txns.filter(t=>t.from === current.id || t.to === current.id).slice().reverse();
+  if(my.length === 0){
+    area.innerHTML = '<p class="note">No transactions found.</p>'; return;
+  }
+  let html = '<h3>Your Transactions</h3><ul class="list">';
+  my.forEach(t=>{ html += `<li>${new Date(t.date).toLocaleString()} — ${t.from} → ${t.to} : ${t.amount} Ë</li>`; });
+  html += '</ul>';
+  area.innerHTML = html;
+}
+
+/* Change PIN */
+function showChangePin(){
+  const area = document.getElementById('bankArea');
+  area.innerHTML = `
+    <h3>Change PIN</h3>
+    <input id="oldPin" class="input" type="password" placeholder="Old PIN"/>
+    <input id="newPin1" class="input" type="password" placeholder="New PIN"/>
+    <input id="newPin2" class="input" type="password" placeholder="Confirm New PIN"/>
+    <button class="btn" onclick="changePin()">Change PIN</button>
+    <p id="changeMsg" class="note"></p>
+  `;
+}
+
+function changePin(){
+  const oldP = document.getElementById('oldPin').value.trim();
+  const n1 = document.getElementById('newPin1').value.trim();
+  const n2 = document.getElementById('newPin2').value.trim();
+  const out = document.getElementById('changeMsg'); out.textContent='';
+  if(oldP !== (current.pin||'')){ out.textContent='Old PIN incorrect.'; return; }
+  if(!n1 || n1 !== n2){ out.textContent='New PIN mismatch.'; return; }
+  users[current.id].pin = n1;
+  current.pin = n1;
+  save(K_USERS, users);
+  out.textContent = 'PIN changed successfully.';
+}
+
+
+function deleteProduct(index){
+  const p = prods[index];
+  if(!current){ alert('Login required'); return; }
+  if(current.id!==p.seller && current.id!=='president' && current.id!=='vicepresident'){
+    alert('You cannot delete this product'); return;
+  }
+  prods.splice(index,1);
+  save(K_PRODS, prods);
+  renderProductList();
+}
+
+/* PRODUCTS - render/upload */
+function renderProductList(){
+  const el = document.getElementById('prodList'); el.innerHTML='';
+  if(prods.length === 0){ el.innerHTML = '<li class="note">No products available.</li>'; return; }
+  prods.slice().reverse().forEach((p, idx)=>{
+    const li = document.createElement('li');
+    li.className = 'list-item';
+    li.innerHTML = `
+  <div class="ad-item">
+    <img src="${p.img}" alt="Product image"/>
+    <div>
+      <div><strong>${p.title || 'Product'}</strong></div>
+      <div class="note">Price: ${p.price} Ë</div>
+      <div class="note">Seller: ${p.seller} (${users[p.seller] ? users[p.seller].name : '-'})</div>
+      <div class="note">WhatsApp: ${users[p.seller] ? users[p.seller].mobile : '-'}</div>
+    </div>
+  </div>
+  <div>
+    <button class="btn" onclick="buyNow(${idx})">Buy Now</button>
+    ${
+      (current && (current.id===p.seller || current.id==='president' || current.id==='vicepresident'))
+      ? ``
+      : ''
+    }
+  </div>`;
+    el.appendChild(li);
+  });
+}
+
+/* Upload product (file or URL) */
+function uploadProduct(){
+  if(!current){ alert('Login required'); return; }
+  const fileEl = document.getElementById('fileInput');
+  const url = document.getElementById('imgUrl').value.trim();
+  const priceVal = document.getElementById('prodPrice').value.trim();
+  const msgEl = document.getElementById('uploadMsg'); msgEl.textContent='';
+  const price = Number(priceVal);
+  const desc = document.getElementById("prodDesc").value.trim();
+  const server = document.getElementById("serverOpt").value;
+  if((!fileEl.files || fileEl.files.length===0) && !url){ msgEl.textContent = 'Choose a file or enter an image URL'; return; }
+  if(isNaN(price) || price <= 0){ msgEl.textContent = 'Enter a valid price in numbers.'; return; }
+  // if file chosen, read data URL
+  if(fileEl.files && fileEl.files[0]){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const dataUrl = e.target.result;
+      addProduct(dataUrl, price, desc, server);
+      msgEl.textContent = 'Uploaded (from file).';
+      document.getElementById('fileInput').value = '';
+      document.getElementById('prodPrice').value = '';
+      document.getElementById('imgUrl').value = '';
+      document.getElementById('prodDesc').value='';
+      document.getElementById('serverOpt').value='';
+      renderProductList();
+    };
+    reader.readAsDataURL(fileEl.files[0]);
+  } else {
+    // use URL
+    addProduct(url, price, desc, server);
+    msgEl.textContent = 'Uploaded (from URL).';
+    document.getElementById('prodPrice').value = '';
+    document.getElementById('imgUrl').value = '';
+      document.getElementById('prodDesc').value='';
+      document.getElementById('serverOpt').value='';
+    renderProductList();
+  }
+}
+
+function addProduct(imgSrc, price){
+  const product = { img: imgSrc, price: Number(price), seller: current.id, title: `Item by ${current.id}`, date: Date.now() };
+  prods.push(product);
+  save(K_PRODS, prods);
+}
+
+/* Buy now: prefill pay form */
+function buyNow(index){
+  if(!current){ alert('Please login to buy'); return; }
+  const p = prods[index];
+  // show bank pay flow and prefill recipient and amount
+  showSection('bank');
+  showPay();
+  setTimeout(()=>{
+    const toEl = document.getElementById('payTo');
+    if(toEl){ toEl.value = p.seller; validateRecipient(); setTimeout(()=>{ const amtEl = document.getElementById('payAmount'); if(amtEl) amtEl.value = p.price; },60); }
+  },80);
+}
+
+/* Transactions list rendering */
+function renderTxnList(){
+  const el = document.getElementById('txnList'); el.innerHTML='';
+  if(txns.length === 0){ el.innerHTML = '<li class="note">No transactions</li>'; return; }
+  txns.slice().reverse().forEach(t=>{
+    const li = document.createElement('li');
+    li.textContent = `${new Date(t.date).toLocaleString()} — ${t.from} → ${t.to} : ${t.amount} Ë`;
+    el.appendChild(li);
+  });
+  // simple activity
+  const act = document.getElementById('actList'); act.innerHTML='';
+  if(current) act.appendChild(createLi('Last login: '+new Date().toLocaleString()));
+}
+
+function createLi(text){ const li = document.createElement('li'); li.textContent = text; return li; }
+
+/* Admin functions (president) */
+function adminCreateUser(){
+  const id = document.getElementById('admId').value.trim();
+  const name = document.getElementById('admName').value.trim();
+  const mobile = document.getElementById('admMobile').value.trim();
+  const age = document.getElementById('admAge').value.trim();
+  const citz = document.getElementById('admCitz').value.trim();
+  const pin = document.getElementById('admPin').value.trim();
+  const out = document.getElementById('admMsg'); out.textContent='';
+  if(!id || !name || !mobile || !age || !citz || !pin){ out.textContent = 'All fields required'; return; }
+  if(users[id]){ out.textContent = 'User ID already exists'; return; }
+  users[id] = { id, name, mobile, age, citz, pin, balance:0 };
+  save(K_USERS, users);
+  out.textContent = `User ${id} created with balance Ë0`;
+  // clear inputs
+  ['admId','admName','admMobile','admAge','admCitz','admPin'].forEach(idn=>document.getElementById(idn).value='');
+  renderAll();
+}
+
+/* Terminate functions */
+function populateTermSelect(){
+  const sel = document.getElementById('termSelect'); sel.innerHTML='';
+  Object.keys(users).forEach(k=>{
+    const opt = document.createElement('option'); opt.value = k; opt.textContent = `${users[k].name || k} (${k})`;
+    sel.appendChild(opt);
+  });
+}
+
+function terminateUser(){
+  const id = document.getElementById('termSelect').value;
+  const type = document.querySelector('input[name="termType"]:checked').value;
+  const date = document.getElementById('termDate').value;
+  const out = document.getElementById('termMsg'); out.textContent='';
+  if(!id){ out.textContent='Select user'; return; }
+  if(type === 'temporary' && !date){ out.textContent='Select end date'; return; }
+  term[id] = { type, until: type==='temporary' ? new Date(date).getTime() : null, active: true };
+  save(K_TERM, term);
+  out.textContent = `User ${id} terminated (${type})`;
+}
+
+/* Cancel termination */
+function cancelTermination(){
+  const id = document.getElementById('termSelect').value;
+  const out = document.getElementById('termMsg'); out.textContent='';
+  if(!id || !term[id]){ out.textContent='No termination found for the selected user'; return; }
+  term[id].active = false; save(K_TERM, term);
+  out.textContent = `Termination canceled for ${id}`;
+}
+
+/* Role assign */
+function assignRole(){
+  const role = document.getElementById('roleSel').value;
+  const uid = document.getElementById('roleUser').value.trim();
+  const out = document.getElementById('roleMsg'); out.textContent='';
+  if(!role || !uid){ out.textContent='Select role and user'; return; }
+  if(!users[uid]){ out.textContent='User not found'; return; }
+  roles[role] = uid; save(K_ROLES, roles); out.textContent = `Assigned ${role} → ${uid}`;
+}
+
+/* Helpers */
+function isTerminated(id){
+  if(!term[id] || !term[id].active) return false;
+  if(term[id].type === 'temporary' && term[id].until && Date.now() > term[id].until){ term[id].active = false; save(K_TERM, term); return false; }
+  return Boolean(term[id].active);
+}
+
+/* buy helper finished - update current after save */
+function saveAndRefresh(){
+  save(K_USERS, users); save(K_PRODS, prods); save(K_TXNS, txns);
+  renderAll();
+}
+
+/* logout */
+function logout(){ location.reload(); }
+
+/* toggle upload quick */
+function toggleUpload(){ document.getElementById('uploadBox').scrollIntoView({behavior:'smooth'}); }
+
+/* initial render */
+renderAll();
+
+</script>
+<datalist id="userList"></datalist>
+</body>
+</html>
